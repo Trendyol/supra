@@ -13,7 +13,7 @@ class Http {
     keepAlive: true
   });
 
-  request(url: string, requestOptions: HttpRequestOptions): Promise<Omit<ClientResponse, 'json'>> {
+  request(url: string, requestOptions: HttpRequestOptions): Promise<ClientResponse> {
     const requestBody = typeof requestOptions.body === "object" ?
       JSON.stringify(requestOptions.body) :
       typeof requestOptions.body === "string" ?

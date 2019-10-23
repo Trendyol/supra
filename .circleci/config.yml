@@ -34,7 +34,6 @@ jobs:
           root: .
           paths:
             - README.md
-            - LICENSE
             - package.json
             - package-lock.json
             - .npmignore

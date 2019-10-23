@@ -7,8 +7,8 @@ import http from "http";
 
 class Client {
   private http: Http;
-  private static circuits: Map<string, CircuitBreaker<any, ClientResponse>> = new Map();
-  private static reporter = new HystrixReporter([]);
+  static circuits: Map<string, CircuitBreaker<any, ClientResponse>> = new Map();
+  static reporter = new HystrixReporter([]);
 
   constructor(http: Http) {
     this.http = http;
@@ -39,11 +39,13 @@ class Client {
     const requestSender = (url: string, requestOptions: HttpRequestOptions): Promise<ClientResponse> => {
       return this.http
         .request(url, requestOptions)
-        .then(res => ({
-            ...res,
-            json: options && options.json && res.body ? JSON.parse(res.body) : {}
+        .then(res => {
+            if (options && options.json && res.body) {
+              res.json = JSON.parse(res.body);
+            }
+            return res;
           }
-        ));
+        );
     };
 
     const circuit = new CircuitBreaker(requestSender, {name, ...options});

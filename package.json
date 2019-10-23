@@ -1,5 +1,5 @@
 {
-  "name": "@trendyol-js/supra",
+  "name": "supra-http",
   "version": "1.0.0",
   "description": "Circuit breaking http client for NodeJs. And it is fast...",
   "main": "./dist/index.ts",

@@ -3,9 +3,7 @@ import * as faker from "faker";
 import {expect} from "chai";
 import {Http} from "../lib/http";
 import http from "http";
-import https from "https";
 import {Compression} from "../lib/compression";
-import {RequestOptions} from "../lib/types";
 
 const sandbox = sinon.createSandbox();
 let httpInstance: Http;
