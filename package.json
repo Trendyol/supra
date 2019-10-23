@@ -1,0 +1,34 @@
+{
+  "name": "@trendyol-js/supra",
+  "version": "1.0.0",
+  "description": "Circuit breaking http client for NodeJs. And it is fast...",
+  "main": "./dist/index.ts",
+  "types": "./dist/index.d.ts",
+  "engines": {
+    "node": ">=10.16"
+  },
+  "engineStrict": true,
+  "scripts": {
+    "test": "jest"
+  },
+  "author": "ahmetcanguven44@gmail.com",
+  "license": "ISC",
+  "dependencies": {
+    "opossum": "^4.1.0",
+    "opossum-hystrix": "0.0.1"
+  },
+  "devDependencies": {
+    "benchmark": "^2.1.4",
+    "@types/chai": "^4.2.3",
+    "@types/faker": "^4.1.6",
+    "@types/jest": "^24.0.19",
+    "@types/node": "^12.11.2",
+    "@types/opossum": "^4.0.0",
+    "chai": "^4.2.0",
+    "faker": "^4.1.0",
+    "jest": "^24.9.0",
+    "sinon": "^7.5.0",
+    "ts-jest": "^24.1.0",
+    "typescript": "^3.6.4"
+  }
+}
