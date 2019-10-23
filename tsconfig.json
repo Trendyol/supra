@@ -5,14 +5,11 @@
     "sourceMap": true,
     "declaration": true,
     "types": [
-      "node"
+      "node",
+      "jest"
     ],
     "strict": true,
     "esModuleInterop": true,
     "outDir": "./dist"
-  },
-  "exclude": [
-    "__tests__",
-    "dist"
-  ]
+  }
 }

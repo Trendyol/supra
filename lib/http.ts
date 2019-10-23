@@ -1,26 +1,27 @@
 import http from "http";
 import https from "https";
 import {Compression} from "./compression";
-import {ClientResponse} from "./types";
+import {ClientResponse, HttpRequestOptions} from "./types";
+import {CONTENT_TYPE} from "./enums";
 
 
 class Http {
-  private httpAgent = new http.Agent({
+  httpAgent = new http.Agent({
     keepAlive: true
   });
-  private httpsAgent = new https.Agent({
+  httpsAgent = new https.Agent({
     keepAlive: true
   });
 
-  request(url: string): Promise<Omit<ClientResponse, 'json'>> {
-    const agent = url.startsWith('https') ? this.httpsAgent : this.httpAgent;
+  request(url: string, requestOptions: HttpRequestOptions): Promise<Omit<ClientResponse, 'json'>> {
+    const requestBody = typeof requestOptions.body === "object" ?
+      JSON.stringify(requestOptions.body) :
+      typeof requestOptions.body === "string" ?
+        requestOptions.body : undefined;
 
-    const options = this.createRequestOptions({
-      method: 'get',
-      agent
-    });
+    const options = this.createRequestOptions(url, requestOptions, requestBody);
 
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       const request = http.request(url, options, response => {
         Compression.handle(response)
           .then(body => resolve({
@@ -29,20 +30,36 @@ class Http {
           }))
       });
 
+      if (requestBody) {
+        request.write(requestBody);
+      }
+
       request.end();
     });
   }
 
-  private createRequestOptions(options: { method: string, headers?: Record<string, string>, json?: boolean, agent: http.Agent | https.Agent }) {
-    return {
-      method: options.method,
-      agent: options.agent,
+  private createRequestOptions(url: string, options: HttpRequestOptions, bodyContent?: string) {
+    const agent = url.startsWith('https') ? this.httpsAgent : this.httpAgent;
+
+    const mergedOptions = {
+      method: options.method || 'get',
+      agent,
       headers: {
         ...options.headers,
-        ...options.json ? {'Content-Type': 'application/json'} : {},
         'accept-encoding': Compression.getSupportedStreams()
       }
     } as https.RequestOptions | http.RequestOptions;
+
+    if (options.json) {
+      mergedOptions.headers!['content-type'] = CONTENT_TYPE.ApplicationJson;
+    }
+
+    if (bodyContent) {
+      mergedOptions.headers!['content-length'] = bodyContent.length;
+      mergedOptions.headers!['content-type'] = CONTENT_TYPE.ApplicationJson;
+    }
+
+    return mergedOptions;
   }
 }
 

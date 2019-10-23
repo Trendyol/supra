@@ -9,7 +9,10 @@
   },
   "engineStrict": true,
   "scripts": {
-    "test": "jest"
+    "test": "jest --coverage",
+    "build": "node ./node_modules/.bin/tsc",
+    "build:watch": "node ./node_modules/.bin/tsc --watch",
+    "test:watch": "jest --coverage --watchAll"
   },
   "author": "ahmetcanguven44@gmail.com",
   "license": "ISC",
@@ -18,12 +21,13 @@
     "opossum-hystrix": "0.0.1"
   },
   "devDependencies": {
-    "benchmark": "^2.1.4",
     "@types/chai": "^4.2.3",
     "@types/faker": "^4.1.6",
     "@types/jest": "^24.0.19",
     "@types/node": "^12.11.2",
     "@types/opossum": "^4.0.0",
+    "@types/sinon": "^7.5.0",
+    "benchmark": "^2.1.4",
     "chai": "^4.2.0",
     "faker": "^4.1.0",
     "jest": "^24.9.0",

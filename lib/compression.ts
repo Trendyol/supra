@@ -2,31 +2,10 @@ import zlib from "zlib";
 import * as http from "http";
 
 class Compression {
-  static decompressGzip(res: http.IncomingMessage): Promise<string> {
+  private static decompressStream(res: http.IncomingMessage, handlerStream?: zlib.BrotliDecompress | zlib.Gunzip): Promise<string> {
     return new Promise((resolve, reject) => {
       let buffer: string = '';
-      const gunzip = zlib.createGunzip();
-
-      gunzip.on('data', bufferChunk => {
-        buffer += bufferChunk
-      });
-
-      gunzip.on('error', err => {
-        reject(err);
-      });
-
-      gunzip.on('end', (_: void) => {
-        resolve(buffer);
-      });
-
-      res.pipe(gunzip);
-    });
-  }
-
-  static decompressBrotli(res: http.IncomingMessage): Promise<string> {
-    return new Promise((resolve, reject) => {
-      let buffer: string = '';
-      const stream = zlib.createBrotliDecompress();
+      const stream = handlerStream || res;
 
       stream.on('data', bufferChunk => {
         buffer += bufferChunk;
@@ -40,33 +19,17 @@ class Compression {
         resolve(buffer);
       });
 
-      res.pipe(stream);
-    })
-  }
-
-  static noCompression(res: http.IncomingMessage): Promise<string> {
-    return new Promise((resolve, reject) => {
-      let buffer: string = '';
-
-      res.on('data', bufferChunk => {
-        buffer += bufferChunk;
-      });
-
-      res.on('error', err => {
-        reject(err);
-      });
-
-      res.on('end', (_: void) => {
-        resolve(buffer);
-      });
+      if (handlerStream) {
+        res.pipe(handlerStream);
+      }
     })
   }
 
   static handle(res: http.IncomingMessage): Promise<string> {
     const encoding = res.headers["content-encoding"];
-    if (encoding === 'gzip') return Compression.decompressGzip(res);
-    if (encoding === 'br') return Compression.decompressBrotli(res);
-    return Compression.noCompression(res);
+    if (encoding === 'gzip') return Compression.decompressStream(res, zlib.createGunzip());
+    if (encoding === 'br') return Compression.decompressStream(res, zlib.createBrotliDecompress());
+    return Compression.decompressStream(res);
   }
 
   static getSupportedStreams() {
