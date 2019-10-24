@@ -14,15 +14,23 @@ class Http {
   });
 
   request(url: string, requestOptions: HttpRequestOptions): Promise<ClientResponse> {
+    const requestProvider = url.startsWith('https') ? {
+      agent: this.httpsAgent,
+      client: https
+    } : {
+      agent: this.httpAgent,
+      client: http
+    };
+
     const requestBody = typeof requestOptions.body === "object" ?
       JSON.stringify(requestOptions.body) :
       typeof requestOptions.body === "string" ?
         requestOptions.body : undefined;
 
-    const options = this.createRequestOptions(url, requestOptions, requestBody);
+    const options = this.createRequestOptions(url, requestOptions, requestProvider.agent, requestBody);
 
     return new Promise(resolve => {
-      const request = http.request(url, options, response => {
+      const request = requestProvider.client.request(url, options, response => {
         Compression.handle(response)
           .then(body => resolve({
             body,
@@ -38,9 +46,7 @@ class Http {
     });
   }
 
-  private createRequestOptions(url: string, options: HttpRequestOptions, bodyContent?: string) {
-    const agent = url.startsWith('https') ? this.httpsAgent : this.httpAgent;
-
+  private createRequestOptions(url: string, options: HttpRequestOptions, agent: http.Agent | https.Agent, bodyContent?: string) {
     const mergedOptions = {
       method: options.method || 'get',
       agent,

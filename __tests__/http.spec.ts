@@ -3,6 +3,7 @@ import * as faker from "faker";
 import {expect} from "chai";
 import {Http} from "../lib/http";
 import http from "http";
+import https from "https";
 import {Compression} from "../lib/compression";
 
 const sandbox = sinon.createSandbox();
@@ -22,7 +23,7 @@ describe('[http.ts]', () => {
       supportedTypes: faker.random.word(),
     };
 
-    mock.requestStub = sandbox.stub(http, 'request').callsArgWith(2, mock.response).returns(mock.requestInstance as any);
+    mock.requestStub = sandbox.stub(url.startsWith('https') ? https: http, 'request').callsArgWith(2, mock.response).returns(mock.requestInstance as any);
     mock.compressionStub = sandbox.stub(Compression, 'handle').resolves(mock.responseBody);
     mock.compressionSupportedStreamsStub = sandbox.stub(Compression, 'getSupportedStreams').returns(mock.supportedTypes);
 
