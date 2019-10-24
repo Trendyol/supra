@@ -1,14 +1,14 @@
 {
   "name": "supra-http",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Circuit breaking http client for NodeJs. And it is fast...",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "engines": {
     "node": ">=10.16"
   },
-  "repository" : {
-    "type" : "git",
+  "repository": {
+    "type": "git",
     "url": "https://github.com/Trendyol/supra.git"
   },
   "engineStrict": true,

@@ -14,7 +14,7 @@ class Client {
     this.http = http;
   }
 
-  static metricsStream(_: http.IncomingMessage, response: http.ServerResponse) {
+  metricsStream(_: http.IncomingMessage, response: http.ServerResponse) {
     response.writeHead(200, {
       'content-type': CONTENT_TYPE.TextEventStream,
       'cache-control': CACHE_CONTROL.NoCache,
