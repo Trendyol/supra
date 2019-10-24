@@ -7,6 +7,10 @@
   "engines": {
     "node": ">=10.16"
   },
+  "repository" : {
+    "type" : "git",
+    "url": "https://github.com/Trendyol/supra.git"
+  },
   "engineStrict": true,
   "scripts": {
     "test": "jest --coverage",
