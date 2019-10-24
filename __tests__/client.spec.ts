@@ -44,7 +44,7 @@ describe('[client.ts]', () => {
     const pipeStub = sandbox.stub(HystrixReporter.stream, 'pipe');
 
     // Act
-    Client.metricsStream(request, response);
+    client.metricsStream(request, response);
 
     // Assert
     expect(pipeStub.calledWithExactly(response)).to.eq(true);
