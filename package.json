@@ -1,6 +1,6 @@
 {
   "name": "supra-http",
-  "version": "1.0.4",
+  "version": "1.0.7",
   "description": "Circuit breaking http client for NodeJs. And it is fast...",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -15,6 +15,7 @@
   "scripts": {
     "test": "jest --coverage",
     "build": "node ./node_modules/.bin/tsc",
+    "bench": "npm run build && node ./benchmark/index.js",
     "build:watch": "node ./node_modules/.bin/tsc --watch",
     "test:watch": "jest --coverage --watchAll"
   },

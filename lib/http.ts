@@ -30,15 +30,17 @@ class Http {
 
     const options = this.createRequestOptions(url, requestOptions, requestProvider.agent, requestBody);
 
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
       const request = requestProvider.client.request(options, response => {
-
         Compression.handle(response)
           .then(body => resolve({
             body,
             response
           }))
       });
+
+      request.on('error', reject);
+      request.on('timeout', request.abort);
 
       if (requestBody) {
         request.write(requestBody);
@@ -61,6 +63,10 @@ class Http {
         'accept-encoding': Compression.getSupportedStreams()
       }
     } as https.RequestOptions | http.RequestOptions;
+
+    if (options.timeout) {
+      mergedOptions.timeout = options.timeout;
+    }
 
     if (options.json) {
       mergedOptions.headers!['content-type'] = CONTENT_TYPE.ApplicationJson;
