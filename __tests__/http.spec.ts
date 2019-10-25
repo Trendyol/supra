@@ -6,6 +6,8 @@ import http from "http";
 import https from "https";
 import {Compression} from "../lib/compression";
 
+const URL = require('fast-url-parser');
+
 const sandbox = sinon.createSandbox();
 let httpInstance: Http;
 
@@ -23,7 +25,7 @@ describe('[http.ts]', () => {
       supportedTypes: faker.random.word(),
     };
 
-    mock.requestStub = sandbox.stub(url.startsWith('https') ? https: http, 'request').callsArgWith(2, mock.response).returns(mock.requestInstance as any);
+    mock.requestStub = sandbox.stub(url.startsWith('https') ? https : http, 'request').callsArgWith(1, mock.response).returns(mock.requestInstance as any);
     mock.compressionStub = sandbox.stub(Compression, 'handle').resolves(mock.responseBody);
     mock.compressionSupportedStreamsStub = sandbox.stub(Compression, 'getSupportedStreams').returns(mock.supportedTypes);
 
@@ -49,6 +51,7 @@ describe('[http.ts]', () => {
   it('should send get request with default options for http', async () => {
     // Arrange
     const mocks = createRequestOptions('http://m.trendyol.com');
+    const url = URL.parse(mocks.url);
 
     // Act
     const finalResponse = await httpInstance.request(mocks.url, mocks.requestOptions);
@@ -58,7 +61,10 @@ describe('[http.ts]', () => {
     expect(mocks.requestInstance.end.calledOnce).to.eq(true);
     expect(mocks.compressionStub.calledWithExactly(mocks.response as any)).to.eq(true);
     expect(mocks.compressionSupportedStreamsStub.calledOnce).to.eq(true);
-    expect(mocks.requestStub.calledWith(mocks.url, {
+    expect(mocks.requestStub.calledWith({
+      hostname: url.hostname,
+      path: url.pathname,
+      protocol: url._protocol + ':',
       method: 'get',
       agent: httpInstance.httpAgent,
       headers: {
@@ -74,6 +80,7 @@ describe('[http.ts]', () => {
   it('should send get request with default options for https', async () => {
     // Arrange
     const mocks = createRequestOptions('https://m.trendyol.com');
+    const url = URL.parse(mocks.url);
 
     // Act
     const finalResponse = await httpInstance.request(mocks.url, mocks.requestOptions);
@@ -83,8 +90,11 @@ describe('[http.ts]', () => {
     expect(mocks.requestInstance.end.calledOnce).to.eq(true);
     expect(mocks.compressionStub.calledWithExactly(mocks.response as any)).to.eq(true);
     expect(mocks.compressionSupportedStreamsStub.calledOnce).to.eq(true);
-    expect(mocks.requestStub.calledWith(mocks.url, {
+    expect(mocks.requestStub.calledWith({
+      hostname: url.hostname,
+      path: url.pathname,
       method: 'get',
+      protocol: url._protocol + ':',
       agent: httpInstance.httpsAgent,
       headers: {
         'accept-encoding': mocks.supportedTypes
@@ -101,6 +111,7 @@ describe('[http.ts]', () => {
     const mocks = createRequestOptions('https://m.trendyol.com', {
       json: true
     });
+    const url = URL.parse(mocks.url);
 
     // Act
     const finalResponse = await httpInstance.request(mocks.url, mocks.requestOptions);
@@ -110,7 +121,10 @@ describe('[http.ts]', () => {
     expect(mocks.requestInstance.end.calledOnce).to.eq(true);
     expect(mocks.compressionStub.calledWithExactly(mocks.response as any)).to.eq(true);
     expect(mocks.compressionSupportedStreamsStub.calledOnce).to.eq(true);
-    expect(mocks.requestStub.calledWith(mocks.url, {
+    expect(mocks.requestStub.calledWith({
+      hostname: url.hostname,
+      path: url.pathname,
+      protocol: url._protocol + ':',
       method: 'get',
       agent: httpInstance.httpsAgent,
       headers: {
@@ -133,6 +147,7 @@ describe('[http.ts]', () => {
         test: 5
       }
     });
+    const url = URL.parse(mocks.url);
 
     // Act
     const finalResponse = await httpInstance.request(mocks.url, mocks.requestOptions);
@@ -143,7 +158,10 @@ describe('[http.ts]', () => {
     expect(mocks.requestInstance.write.calledWithExactly(JSON.stringify(mocks.requestOptions.body))).to.eq(true);
     expect(mocks.compressionStub.calledWithExactly(mocks.response as any)).to.eq(true);
     expect(mocks.compressionSupportedStreamsStub.calledOnce).to.eq(true);
-    expect(mocks.requestStub.calledWith(mocks.url, {
+    expect(mocks.requestStub.calledWith({
+      hostname: url.hostname,
+      protocol: url._protocol + ':',
+      path: url.pathname,
       method: 'post',
       agent: httpInstance.httpsAgent,
       headers: {
@@ -164,6 +182,7 @@ describe('[http.ts]', () => {
       method: 'post',
       body: faker.random.word()
     });
+    const url = URL.parse(mocks.url);
 
 
     // Act
@@ -175,7 +194,10 @@ describe('[http.ts]', () => {
     expect(mocks.requestInstance.write.calledWithExactly(mocks.requestOptions.body)).to.eq(true);
     expect(mocks.compressionStub.calledWithExactly(mocks.response as any)).to.eq(true);
     expect(mocks.compressionSupportedStreamsStub.calledOnce).to.eq(true);
-    expect(mocks.requestStub.calledWith(mocks.url, {
+    expect(mocks.requestStub.calledWith({
+      hostname: url.hostname,
+      path: url.pathname,
+      protocol: url._protocol + ':',
       method: 'post',
       agent: httpInstance.httpsAgent,
       headers: {

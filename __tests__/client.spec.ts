@@ -126,7 +126,7 @@ describe('[client.ts]', () => {
 
     httpMock
       .expects('request')
-      .withExactArgs(url, undefined)
+      .withExactArgs(url, {})
       .resolves(httpResponse);
 
     // Act
@@ -135,7 +135,6 @@ describe('[client.ts]', () => {
     // Assert
     expect(response).to.deep.eq({
       body: '{"test":4}',
-
     });
   });
 });

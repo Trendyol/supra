@@ -3,6 +3,7 @@ import https from "https";
 import {Compression} from "./compression";
 import {ClientResponse, HttpRequestOptions} from "./types";
 import {CONTENT_TYPE} from "./enums";
+import Url from "fast-url-parser";
 
 
 class Http {
@@ -30,7 +31,8 @@ class Http {
     const options = this.createRequestOptions(url, requestOptions, requestProvider.agent, requestBody);
 
     return new Promise(resolve => {
-      const request = requestProvider.client.request(url, options, response => {
+      const request = requestProvider.client.request(options, response => {
+
         Compression.handle(response)
           .then(body => resolve({
             body,
@@ -46,10 +48,14 @@ class Http {
     });
   }
 
-  private createRequestOptions(url: string, options: HttpRequestOptions, agent: http.Agent | https.Agent, bodyContent?: string) {
+  private createRequestOptions(targetUrl: string, options: HttpRequestOptions, agent: http.Agent | https.Agent, bodyContent?: string) {
+    const url = Url.parse(targetUrl);
     const mergedOptions = {
       method: options.method || 'get',
       agent,
+      hostname: url.host,
+      protocol: url._protocol + ':',
+      path: url.pathname + (url.search || ''),
       headers: {
         ...options.headers,
         'accept-encoding': Compression.getSupportedStreams()

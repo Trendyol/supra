@@ -32,7 +32,7 @@ class Client {
     const circuit = Client.circuits.get(name) || this.createCircuit(name, options as any);
 
     return circuit
-      .fire(url, options)
+      .fire(url, options || {})
   }
 
   private createCircuit(name: string, options: RequestOptions): CircuitBreaker<any, ClientResponse> {

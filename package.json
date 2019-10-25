@@ -1,6 +1,6 @@
 {
   "name": "supra-http",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Circuit breaking http client for NodeJs. And it is fast...",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -21,6 +21,7 @@
   "author": "ahmetcanguven44@gmail.com",
   "license": "ISC",
   "dependencies": {
+    "fast-url-parser": "^1.1.3",
     "opossum": "^4.1.0",
     "opossum-hystrix": "0.0.1"
   },
@@ -35,6 +36,9 @@
     "chai": "^4.2.0",
     "faker": "^4.1.0",
     "jest": "^24.9.0",
+    "nock": "^11.6.0",
+    "request": "^2.88.0",
+    "requestretry": "^4.0.2",
     "sinon": "^7.5.0",
     "ts-jest": "^24.1.0",
     "typescript": "^3.6.4"
