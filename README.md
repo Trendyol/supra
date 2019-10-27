@@ -13,7 +13,7 @@ npm i supra-http
 
 ### Get
 ```js
-client.request('browsingConfigurationRequest', 'https://api.trendyol.com/mwebbrowsinggw/', {
+client.request('apiCallName', 'https://my-api/endpoint', {
   method: 'get',
   json: true
 })
@@ -23,7 +23,7 @@ client.request('browsingConfigurationRequest', 'https://api.trendyol.com/mwebbro
 
 ### Post
 ```js
-client.request('browsingConfigurationRequest', 'https://api.trendyol.com/mwebbrowsinggw/', {
+client.request('apiCallName', 'https://my-api/endpoint', {
   method: 'post',
   body: {
     test: true  
@@ -36,7 +36,7 @@ client.request('browsingConfigurationRequest', 'https://api.trendyol.com/mwebbro
 
 ### Circuit Breaking
 ```js
-client.request('browsingConfigurationRequest', 'https://api.trendyol.com/mwebbrowsinggw/', {
+client.request('apiCallName', 'https://my-api/endpoint', {
   timeout: 1000,
   allowWarmUp: true,
   errorThresholdPercentage: 50,
@@ -50,3 +50,16 @@ client.request('browsingConfigurationRequest', 'https://api.trendyol.com/mwebbro
 ```
 
 You can read more about properties from ![opossum](https://github.com/nodeshift/opossum).
+
+### Decompression
+Supra supports gzip and brotli decompressions over zlib. So it requires at least NodeJs 10.17.x
+
+### Benchmarks
+```
+supra with circuit x 8,779 ops/sec ±3.31% (76 runs sampled)
+supra without circuit x 8,625 ops/sec ±4.68% (68 runs sampled)
+requestretry x 3,672 ops/sec ±7.24% (67 runs sampled)
+request x 5,092 ops/sec ±4.42% (73 runs sampled)
+native http request 1.0 x 9,874 ops/sec ±5.82% (67 runs sampled)
+native http request 1.1 x 9,681 ops/sec ±6.36% (73 runs sampled)
+```
