@@ -21,14 +21,30 @@ const scope = nock(host)
   })
   .persist(true);
 
+suite.add('supra with circuit warmup', {
+  defer: true,
+  fn: defer =>
+    supra.request('requestName', host + path, {
+      enabled: true,
+      allowWarmUp: true,
+      timeout: 100,
+      json: true
+    })
+      .then(res => defer.resolve(res))
+      .catch(err => {
+        throw err
+      })
+});
+
 
 suite.add('supra with circuit', {
   defer: true,
   fn: defer =>
     supra.request('requestName', host + path, {
-      enabled: false,
+      enabled: true,
       allowWarmUp: true,
-      timeout: 100
+      timeout: 100,
+      json: true
     })
       .then(res => defer.resolve(res))
       .catch(err => {
@@ -89,7 +105,7 @@ suite.add('native http request 1.0', {
         body += data
       });
       gunzip.on('end', () => {
-        return defer.resolve(body);
+        return defer.resolve(JSON.parse(body));
       });
       gunzip.on('error', () => {
         throw new Error();
@@ -109,7 +125,7 @@ suite.add('native http request 1.1', {
         body += data
       });
       gunzip.on('end', () => {
-        return defer.resolve(body);
+        return defer.resolve(JSON.parse(body));
       });
       gunzip.on('error', () => {
         throw new Error();
@@ -132,4 +148,5 @@ suite.on('complete', function () {
   console.log(this[3].toString());
   console.log(this[4].toString());
   console.log(this[5].toString());
+  console.log(this[6].toString());
 });

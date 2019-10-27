@@ -32,7 +32,8 @@ class Http {
 
     return new Promise((resolve, reject) => {
       const request = requestProvider.client.request(options, response => {
-        Compression.handle(response)
+        Compression
+          .handle(response)
           .then(body => resolve({
             body,
             response

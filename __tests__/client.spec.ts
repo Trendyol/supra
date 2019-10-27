@@ -33,30 +33,6 @@ describe('[client.ts]', () => {
     expect(client).to.be.instanceOf(Client);
   });
 
-  it('should export metrics stream', () => {
-    // Arrange
-    const request = {} as any;
-    const response = {
-      writeHead: sandbox.stub(),
-      write: sandbox.stub()
-    } as any;
-
-    const pipeStub = sandbox.stub(HystrixReporter.stream, 'pipe');
-
-    // Act
-    client.metricsStream(request, response);
-
-    // Assert
-    expect(pipeStub.calledWithExactly(response)).to.eq(true);
-    expect(response.writeHead.calledWithExactly(200, {
-      'content-type': CONTENT_TYPE.TextEventStream,
-      'cache-control': CACHE_CONTROL.NoCache,
-      'connection': CONNECTION.KeepAlive
-    })).to.eq(true);
-    expect(response.write.calledWithExactly('retry: 10000\n')).to.eq(true);
-    expect(response.write.calledWithExactly('event: connecttime\n')).to.eq(true);
-  });
-
   it('should create new circuit', async () => {
     // Arrange
     const name = faker.random.word();
