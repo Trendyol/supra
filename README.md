@@ -49,7 +49,7 @@ client.request('apiCallName', 'https://my-api/endpoint', {
   .catch(_ => console.log(_));
 ```
 
-You can read more about properties from ![opossum](https://github.com/nodeshift/opossum).
+You can read more about properties from [opossum](https://github.com/nodeshift/opossum).
 
 ### Decompression
 Supra supports gzip and brotli decompressions over zlib. So it requires at least NodeJs 10.17.x
