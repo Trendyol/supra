@@ -4,7 +4,7 @@ import {Compression} from "./compression";
 import {ClientResponse, HttpRequestOptions} from "./types";
 import {CONTENT_TYPE} from "./enums";
 import Url from "fast-url-parser";
-
+import {stringify} from "querystring";
 
 
 class Http {
@@ -29,8 +29,14 @@ class Http {
       typeof requestOptions.body === "string" ?
         requestOptions.body : undefined;
 
+    const requestFormContent = !requestBody ?
+      typeof requestOptions.form === "object" ?
+        stringify(requestOptions.form as any) :
+        typeof requestOptions.form === "string" ?
+          requestOptions.form : undefined : undefined;
 
-    const options = this.createRequestOptions(url, requestOptions, requestProvider.agent, requestBody);
+
+    const options = this.createRequestOptions(url, requestOptions, requestProvider.agent, requestBody, requestFormContent);
 
     const request = requestProvider.client.request(options, response => {
       Compression
@@ -48,14 +54,15 @@ class Http {
       .on('error', e => cb(e))
       .on('timeout', request.abort);
 
-    if (requestBody) {
-      request.write(requestBody);
+    const writableContent = requestBody || requestFormContent;
+    if (writableContent) {
+      request.write(writableContent);
     }
 
     request.end();
   }
 
-  private createRequestOptions(targetUrl: string, options: HttpRequestOptions, agent: http.Agent | https.Agent, bodyContent?: string) {
+  private createRequestOptions(targetUrl: string, options: HttpRequestOptions, agent: http.Agent | https.Agent, bodyContent?: string, formContent?: string) {
     const url = Url.parse(targetUrl);
 
     const mergedOptions = {
@@ -82,6 +89,9 @@ class Http {
     if (bodyContent) {
       mergedOptions.headers!['content-length'] = bodyContent.length;
       mergedOptions.headers!['content-type'] = CONTENT_TYPE.ApplicationJson;
+    } else if (formContent) {
+      mergedOptions.headers!['content-length'] = formContent.length;
+      mergedOptions.headers!['content-type'] = CONTENT_TYPE.FormUrlEncoded;
     }
 
     return mergedOptions;

@@ -5,7 +5,7 @@ import {Http} from "../lib/http";
 import http from "http";
 import https from "https";
 import {Compression} from "../lib/compression";
-import {SinonMock} from "sinon";
+import {stringify} from "querystring";
 
 const URL = require('fast-url-parser');
 
@@ -204,6 +204,48 @@ describe('[http.ts]', () => {
   });
 
 
+  it('should send post(form) request with default options for https', async () => {
+    // Arrange
+    const mocks = createRequestOptions('https://m.trendyol.com', {
+      method: 'post',
+      form: {
+        test: 5
+      }
+    });
+    const url = URL.parse(mocks.url);
+    mocks.requestInstanceMock.expects('on').withArgs('timeout', sinon.match.func).returnsThis();
+    mocks.requestInstanceMock.expects('on').withArgs('error', sinon.match.func).returnsThis();
+    mocks.requestInstanceMock.expects('end').once();
+    mocks.requestInstanceMock.expects('write').withArgs(stringify(mocks.requestOptions.form)).once();
+
+    const cbStub = sandbox.stub();
+
+    // Act
+    httpInstance.request(mocks.url, mocks.requestOptions, cbStub);
+
+    // Assert
+    expect(mocks.requestStub.calledOnce).to.eq(true);
+    expect(mocks.compressionStub.calledWithExactly(mocks.response as any, sinon.match.func)).to.eq(true);
+    expect(mocks.compressionSupportedStreamsStub.calledOnce).to.eq(true);
+    expect(mocks.requestStub.calledWith({
+      hostname: url.hostname,
+      protocol: url._protocol + ':',
+      path: url.pathname,
+      port: null,
+      method: 'post',
+      agent: httpInstance.httpsAgent,
+      headers: {
+        'accept-encoding': mocks.supportedTypes,
+        'content-length': stringify(mocks.requestOptions.form).length,
+        'content-type': 'application/x-www-form-urlencoded'
+      }
+    }, sinon.match.func)).to.eq(true);
+    expect(cbStub.calledWith(null, {
+      body: mocks.responseBody,
+      response: mocks.response
+    })).to.eq(true);
+  });
+
   it('should send post request with default options for https', async () => {
     // Arrange
     const mocks = createRequestOptions('https://m.trendyol.com', {
@@ -285,6 +327,47 @@ describe('[http.ts]', () => {
       response: mocks.response
     })).to.eq(true);
   });
+
+  it('should send post(form) request with default options for https without object', async () => {
+    // Arrange
+    const mocks = createRequestOptions('https://m.trendyol.com', {
+      method: 'post',
+      form: faker.random.word()
+    });
+    const url = URL.parse(mocks.url);
+    mocks.requestInstanceMock.expects('on').withArgs('timeout', sinon.match.func).returnsThis();
+    mocks.requestInstanceMock.expects('on').withArgs('error', sinon.match.func).returnsThis();
+    mocks.requestInstanceMock.expects('end').once();
+    mocks.requestInstanceMock.expects('write').withArgs(mocks.requestOptions.form).once();
+
+    const cbStub = sandbox.stub();
+
+    // Act
+    httpInstance.request(mocks.url, mocks.requestOptions as any, cbStub);
+
+    // Assert
+    expect(mocks.requestStub.calledOnce).to.eq(true);
+    expect(mocks.compressionStub.calledWithExactly(mocks.response as any, sinon.match.func)).to.eq(true);
+    expect(mocks.compressionSupportedStreamsStub.calledOnce).to.eq(true);
+    expect(mocks.requestStub.calledWith({
+      hostname: url.hostname,
+      path: url.pathname,
+      protocol: url._protocol + ':',
+      port: null,
+      method: 'post',
+      agent: httpInstance.httpsAgent,
+      headers: {
+        'accept-encoding': mocks.supportedTypes,
+        'content-length': mocks.requestOptions.form.length,
+        'content-type': 'application/x-www-form-urlencoded'
+      }
+    }, sinon.match.func)).to.eq(true);
+    expect(cbStub.calledWith(null, {
+      body: mocks.responseBody,
+      response: mocks.response
+    })).to.eq(true);
+  });
+
 
   it('should send get request with default options for https for timeout', async () => {
     // Arrange

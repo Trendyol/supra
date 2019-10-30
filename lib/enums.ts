@@ -1,6 +1,7 @@
 enum CONTENT_TYPE {
   TextEventStream = 'text/event-stream',
-  ApplicationJson = 'application/json'
+  ApplicationJson = 'application/json',
+  FormUrlEncoded = 'application/x-www-form-urlencoded'
 }
 
 enum CACHE_CONTROL {

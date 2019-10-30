@@ -4,6 +4,7 @@ import * as CircuitBreaker from "opossum";
 interface HttpRequestOptions {
   method?: 'get' | 'post' | 'delete' | 'put';
   body?: string | object;
+  form?: string | object;
   json?: boolean;
   headers?: Record<string, string>;
   httpTimeout?: number;
