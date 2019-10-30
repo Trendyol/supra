@@ -6,7 +6,7 @@ interface HttpRequestOptions {
   body?: string | object;
   json?: boolean;
   headers?: Record<string, string>;
-  timeout?: number;
+  httpTimeout?: number;
 }
 
 interface RequestOptions extends CircuitBreaker.Options, HttpRequestOptions {

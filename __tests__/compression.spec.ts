@@ -46,6 +46,8 @@ describe('[compression.ts]', () => {
     const decompressStream = createDecompressStream();
     const decompressMock = sandbox.mock(decompressStream);
 
+    const responseStub = sandbox.stub();
+
     requestMock
       .expects('pipe')
       .withArgs(decompressStream);
@@ -67,10 +69,10 @@ describe('[compression.ts]', () => {
     sandbox.stub(zlib, 'createGunzip').returns(decompressStream as any);
 
     // Act
-    const decompressed = await Compression.handle(request);
+    await Compression.handle(request, responseStub);
 
     // Assert
-    expect(decompressed).to.eq(decompressionText);
+    expect(responseStub.calledWithExactly(null, decompressionText)).to.eq(true);
   });
 
   it('should decompress brotli', async () => {
@@ -82,6 +84,8 @@ describe('[compression.ts]', () => {
     const requestMock = sandbox.mock(request);
     const decompressStream = createDecompressStream();
     const decompressMock = sandbox.mock(decompressStream);
+
+    const responseStub = sandbox.stub();
 
     requestMock
       .expects('pipe')
@@ -104,10 +108,10 @@ describe('[compression.ts]', () => {
     sandbox.stub(zlib, 'createBrotliDecompress').returns(decompressStream as any);
 
     // Act
-    const decompressed = await Compression.handle(request);
+    Compression.handle(request, responseStub);
 
     // Assert
-    expect(decompressed).to.eq(decompressionText);
+    expect(responseStub.calledWithExactly(null, decompressionText)).to.eq(true);
   });
 
   it('should return stream content without decompression', async () => {
@@ -116,6 +120,7 @@ describe('[compression.ts]', () => {
     const request = createRequest() as any;
     const requestMock = sandbox.mock(request);
 
+    const responseStub = sandbox.stub();
 
     requestMock
       .expects('on')
@@ -132,18 +137,19 @@ describe('[compression.ts]', () => {
       .callsArg(1);
 
     // Act
-    const decompressed = await Compression.handle(request);
+    Compression.handle(request, responseStub);
 
     // Assert
-    expect(decompressed).to.eq(decompressionText);
+    expect(responseStub.calledWithExactly(null, decompressionText)).to.eq(true);
   });
 
-  it('should return reject when stream failed', (done) => {
+  it('should return reject when stream failed', () => {
     // Arrange
-    const decompressionText = faker.random.word();
     const request = createRequest() as any;
     const requestMock = sandbox.mock(request);
     const error = faker.random.word();
+
+    const responseStub = sandbox.stub();
 
     requestMock
       .expects('on')
@@ -161,9 +167,10 @@ describe('[compression.ts]', () => {
 
     // Act
     Compression
-      .handle(request)
-      .then(_ => done('Failed to throw'))
-      .catch(_ => done());
+      .handle(request, responseStub);
+
+    expect(responseStub.calledWithExactly(error)).to.eq(true);
+
   });
 
   it('should return supported content encoding types', () => {

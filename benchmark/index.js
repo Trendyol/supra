@@ -9,8 +9,9 @@ const requestretry = require('requestretry');
 
 const suite = Benchmark.Suite();
 
-const host = 'http://m.trendyol.com';
-const path = '/';
+const host = 'http://localhost:4406';
+const path = '/package-lock.json';
+
 
 const compressedMessage = zlib.gzipSync(JSON.stringify(faker.helpers.createTransaction()));
 
@@ -70,7 +71,9 @@ suite.add('requestretry', {
   fn: defer => {
     return requestretry(host + path, {
       gzip: true,
-      json: true
+      json: true,
+      timeout: 100,
+      maxRetry: 0
     }, function (error, response, body) {
       if (error) {
         throw error
@@ -85,7 +88,8 @@ suite.add('request', {
   fn: defer => {
     return request(host + path, {
       gzip: true,
-      json: true
+      json: true,
+      timeout: 100
     }, function (error, response, body) {
       if (error) {
         throw error
@@ -98,7 +102,7 @@ suite.add('request', {
 suite.add('native http request 1.0', {
   defer: true,
   fn: defer =>
-    http.get(host + path, res => {
+    http.get(host + path, {timeout: 100}, res => {
       let body = '';
       const gunzip = zlib.createGunzip();
       gunzip.on('data', data => {
@@ -118,7 +122,7 @@ suite.add('native http request 1.0', {
 suite.add('native http request 1.1', {
   defer: true,
   fn: defer =>
-    http.get(host + path, {agent: new http.Agent({keepAlive: true})}, res => {
+    http.get(host + path, {agent: new http.Agent({keepAlive: true}), timeout: 100}, res => {
       let body = '';
       const gunzip = zlib.createGunzip();
       gunzip.on('data', data => {
@@ -129,16 +133,24 @@ suite.add('native http request 1.1', {
       });
       gunzip.on('error', () => {
         throw new Error();
-      })
+      });
 
       res.pipe(gunzip);
     })
 });
 
-
-suite.run({
-  async: true
-});
+supra.request('requestName', host + path, {
+  enabled: true,
+  allowWarmUp: true,
+  timeout: 100,
+  json: true
+})
+  .then(res => console.log('Warmed Up'))
+  .then(() => {
+    suite.run({
+      async: true
+    });
+  });
 
 
 suite.on('complete', function () {

@@ -6,6 +6,7 @@ import {CONTENT_TYPE} from "./enums";
 import Url from "fast-url-parser";
 
 
+
 class Http {
   httpAgent = new http.Agent({
     keepAlive: true
@@ -14,7 +15,7 @@ class Http {
     keepAlive: true
   });
 
-  request(url: string, requestOptions: HttpRequestOptions): Promise<ClientResponse> {
+  request(url: string, requestOptions: HttpRequestOptions, cb: (err: null | Error, clientResponse?: ClientResponse) => void): void {
     const requestProvider = url.startsWith('https') ? {
       agent: this.httpsAgent,
       client: https
@@ -28,35 +29,40 @@ class Http {
       typeof requestOptions.body === "string" ?
         requestOptions.body : undefined;
 
+
     const options = this.createRequestOptions(url, requestOptions, requestProvider.agent, requestBody);
 
-    return new Promise((resolve, reject) => {
-      const request = requestProvider.client.request(options, response => {
-        Compression
-          .handle(response)
-          .then(body => resolve({
+    const request = requestProvider.client.request(options, response => {
+      Compression
+        .handle(response, (err, body) => {
+          if (err || !body) return cb(err);
+
+          cb(null, {
             body,
             response
-          }))
-      });
-
-      request.on('error', reject);
-      request.on('timeout', request.abort);
-
-      if (requestBody) {
-        request.write(requestBody);
-      }
-
-      request.end();
+          });
+        });
     });
+
+    request
+      .on('error', e => cb(e))
+      .on('timeout', request.abort);
+
+    if (requestBody) {
+      request.write(requestBody);
+    }
+
+    request.end();
   }
 
   private createRequestOptions(targetUrl: string, options: HttpRequestOptions, agent: http.Agent | https.Agent, bodyContent?: string) {
     const url = Url.parse(targetUrl);
+
     const mergedOptions = {
       method: options.method || 'get',
       agent,
-      hostname: url.host,
+      hostname: url.hostname,
+      port: url.port,
       protocol: url._protocol + ':',
       path: url.pathname + (url.search || ''),
       headers: {
@@ -65,8 +71,8 @@ class Http {
       }
     } as https.RequestOptions | http.RequestOptions;
 
-    if (options.timeout) {
-      mergedOptions.timeout = options.timeout;
+    if (options.httpTimeout) {
+      mergedOptions.timeout = options.httpTimeout;
     }
 
     if (options.json) {

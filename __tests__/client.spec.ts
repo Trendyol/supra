@@ -3,8 +3,6 @@ import * as faker from "faker";
 import {expect} from "chai";
 import {Client} from "../lib/client";
 import {Http} from "../lib/http";
-import HystrixReporter from "opossum-hystrix"
-import {CACHE_CONTROL, CONNECTION, CONTENT_TYPE} from "../lib/enums";
 import CircuitBreaker = require("opossum");
 
 const sandbox = sinon.createSandbox();
@@ -74,10 +72,12 @@ describe('[client.ts]', () => {
     const requestOptions = {json: true};
     const url = faker.internet.url();
 
+    const responseCallback = sandbox.stub();
+
     httpMock
       .expects('request')
-      .withExactArgs(url, requestOptions)
-      .resolves(httpResponse);
+      .withExactArgs(url, requestOptions, sinon.match.func)
+      .callsArgWith(2, null, httpResponse);
 
     // Act
     const response = await client.request(name, url, requestOptions);
@@ -102,8 +102,9 @@ describe('[client.ts]', () => {
 
     httpMock
       .expects('request')
-      .withExactArgs(url, {})
-      .resolves(httpResponse);
+      .withExactArgs(url, {}, sinon.match.func)
+      .callsArgWith(2, null, httpResponse);
+
 
     // Act
     const response = await client.request(name, url);
@@ -112,5 +113,24 @@ describe('[client.ts]', () => {
     expect(response).to.deep.eq({
       body: '{"test":4}',
     });
+  });
+
+  it('should call http handler (http error)', (done) => {
+    // Arrange
+    const error = faker.random.word();
+    const name = faker.random.word();
+    const url = faker.internet.url();
+
+    httpMock
+      .expects('request')
+      .withExactArgs(url, {}, sinon.match.func)
+      .callsArgWith(2, error, undefined);
+
+
+    // Act
+    client
+      .request(name, url)
+      .then(_ => done("Expected to throw"))
+      .catch(_ => done())
   });
 });

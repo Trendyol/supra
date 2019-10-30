@@ -19,15 +19,19 @@ class Client {
 
   private createCircuit(name: string, options: RequestOptions): CircuitBreaker<any, ClientResponse> {
     const requestSender = (url: string, requestOptions: HttpRequestOptions): Promise<ClientResponse> => {
-      return this.http
-        .request(url, requestOptions)
-        .then(res => {
-            if (options && options.json && res.body) {
-              res.json = JSON.parse(res.body);
+      return new Promise<ClientResponse>((resolve, reject) => {
+        this.http
+          .request(url, requestOptions, (err, res) => {
+            if (err || !res) {
+              reject(err);
+            } else {
+              if (options && options.json && res.body) {
+                res.json = JSON.parse(res.body);
+              }
+              resolve(res);
             }
-            return res;
-          }
-        );
+          });
+      });
     };
 
     const circuit = new CircuitBreaker(requestSender, {name, ...options});
