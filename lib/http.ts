@@ -87,10 +87,10 @@ class Http {
     }
 
     if (bodyContent) {
-      mergedOptions.headers!['content-length'] = bodyContent.length;
+      mergedOptions.headers!['content-length'] = Buffer.byteLength(bodyContent);
       mergedOptions.headers!['content-type'] = CONTENT_TYPE.ApplicationJson;
     } else if (formContent) {
-      mergedOptions.headers!['content-length'] = formContent.length;
+      mergedOptions.headers!['content-length'] = Buffer.byteLength(formContent);
       mergedOptions.headers!['content-type'] = CONTENT_TYPE.FormUrlEncoded;
     }
 

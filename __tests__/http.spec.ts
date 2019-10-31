@@ -236,7 +236,7 @@ describe('[http.ts]', () => {
       agent: httpInstance.httpsAgent,
       headers: {
         'accept-encoding': mocks.supportedTypes,
-        'content-length': stringify(mocks.requestOptions.form).length,
+        'content-length': Buffer.byteLength(stringify(mocks.requestOptions.form)),
         'content-type': 'application/x-www-form-urlencoded'
       }
     }, sinon.match.func)).to.eq(true);
@@ -278,7 +278,7 @@ describe('[http.ts]', () => {
       agent: httpInstance.httpsAgent,
       headers: {
         'accept-encoding': mocks.supportedTypes,
-        'content-length': JSON.stringify(mocks.requestOptions.body).length,
+        'content-length': Buffer.byteLength(JSON.stringify(mocks.requestOptions.body)),
         'content-type': 'application/json'
       }
     }, sinon.match.func)).to.eq(true);
@@ -318,7 +318,7 @@ describe('[http.ts]', () => {
       agent: httpInstance.httpsAgent,
       headers: {
         'accept-encoding': mocks.supportedTypes,
-        'content-length': mocks.requestOptions.body.length,
+        'content-length': Buffer.byteLength(mocks.requestOptions.body),
         'content-type': 'application/json'
       }
     }, sinon.match.func)).to.eq(true);
@@ -358,7 +358,7 @@ describe('[http.ts]', () => {
       agent: httpInstance.httpsAgent,
       headers: {
         'accept-encoding': mocks.supportedTypes,
-        'content-length': mocks.requestOptions.form.length,
+        'content-length': Buffer.byteLength(mocks.requestOptions.form),
         'content-type': 'application/x-www-form-urlencoded'
       }
     }, sinon.match.func)).to.eq(true);
