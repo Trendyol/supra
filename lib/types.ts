@@ -15,7 +15,7 @@ interface RequestOptions extends CircuitBreaker.Options, HttpRequestOptions {
 }
 
 interface ClientResponse {
-  body: string;
+  body?: string;
   json?: object;
   response: http.IncomingMessage
 }

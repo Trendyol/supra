@@ -41,7 +41,7 @@ class Http {
     const request = requestProvider.client.request(options, response => {
       Compression
         .handle(response, (err, body) => {
-          if (err || !body) return cb(err);
+          if (err) return cb(err);
 
           cb(null, {
             body,
