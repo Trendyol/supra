@@ -26,9 +26,15 @@ class Client {
               reject(err);
             } else {
               if (options && options.json && res.body) {
-                res.json = JSON.parse(res.body);
+                try {
+                  res.json = JSON.parse(res.body);
+                  resolve(res);
+                } catch (e) {
+                  reject(e);
+                }
+              } else {
+                resolve(res);
               }
-              resolve(res);
             }
           });
       });
