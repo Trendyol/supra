@@ -38,7 +38,15 @@ class Http {
 
     const options = this.createRequestOptions(url, requestOptions, requestProvider.agent, requestBody, requestFormContent);
 
+    let timeoutRef: any;
+    if(options.timeout){
+      timeoutRef = setTimeout(() => {
+        request.abort();
+      }, options.timeout)
+    }
+
     const request = requestProvider.client.request(options, response => {
+      clearTimeout(timeoutRef);
       Compression
         .handle(response, (err, body) => {
           if (err) return cb(err);
@@ -51,8 +59,10 @@ class Http {
     });
 
     request
-      .on('error', e => cb(e))
-      .on('timeout', request.abort);
+      .on('error', e => {
+        clearTimeout(timeoutRef);
+        cb(e);
+      });
 
     const writableContent = requestBody || requestFormContent;
     if (writableContent) {

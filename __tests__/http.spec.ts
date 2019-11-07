@@ -14,7 +14,7 @@ let httpInstance: Http;
 
 
 describe('[http.ts]', () => {
-  const createRequestOptions = (url: string, options?: object, compressionError: string | null = null) => {
+  const createRequestOptions = (url: string, options?: object, compressionError: string | null = null, timeout: boolean = false) => {
     const requestInstance = {
       end: () => {
       },
@@ -35,11 +35,15 @@ describe('[http.ts]', () => {
       supportedTypes: faker.random.word(),
     };
 
-    mock.requestStub = sandbox.stub(url.startsWith('https') ? https : http, 'request').callsArgWith(1, mock.response).returns(mock.requestInstance as any);
+    if (!timeout) {
+      mock.requestStub = sandbox.stub(url.startsWith('https') ? https : http, 'request').callsArgWith(1, mock.response).returns(mock.requestInstance as any);
+    } else {
+      mock.requestStub = sandbox.stub(url.startsWith('https') ? https : http, 'request').returns(mock.requestInstance as any)
+    }
 
-    if(compressionError){
+    if (compressionError) {
       mock.compressionStub = sandbox.stub(Compression, 'handle').callsArgWith(1, compressionError);
-    }else{
+    } else {
       mock.compressionStub = sandbox.stub(Compression, 'handle').callsArgWith(1, null, mock.responseBody);
     }
 
@@ -70,7 +74,6 @@ describe('[http.ts]', () => {
     // Arrange
     const mocks = createRequestOptions('http://m.trendyol.com');
     const url = URL.parse(mocks.url);
-    mocks.requestInstanceMock.expects('on').withArgs('timeout', sinon.match.func).returnsThis();
     mocks.requestInstanceMock.expects('on').withArgs('error', sinon.match.func).returnsThis();
     mocks.requestInstanceMock.expects('end').once();
 
@@ -105,7 +108,6 @@ describe('[http.ts]', () => {
     const error = faker.random.word();
     const mocks = createRequestOptions('http://m.trendyol.com', undefined, error);
     const url = URL.parse(mocks.url);
-    mocks.requestInstanceMock.expects('on').withArgs('timeout', sinon.match.func).returnsThis();
     mocks.requestInstanceMock.expects('on').withArgs('error', sinon.match.func).returnsThis();
     mocks.requestInstanceMock.expects('end').once();
 
@@ -136,7 +138,6 @@ describe('[http.ts]', () => {
     // Arrange
     const mocks = createRequestOptions('https://m.trendyol.com');
     const url = URL.parse(mocks.url);
-    mocks.requestInstanceMock.expects('on').withArgs('timeout', sinon.match.func).returnsThis();
     mocks.requestInstanceMock.expects('on').withArgs('error', sinon.match.func).returnsThis();
     mocks.requestInstanceMock.expects('end').once();
 
@@ -172,7 +173,6 @@ describe('[http.ts]', () => {
       json: true
     });
     const url = URL.parse(mocks.url);
-    mocks.requestInstanceMock.expects('on').withArgs('timeout', sinon.match.func).returnsThis();
     mocks.requestInstanceMock.expects('on').withArgs('error', sinon.match.func).returnsThis();
     mocks.requestInstanceMock.expects('end').once();
 
@@ -213,7 +213,6 @@ describe('[http.ts]', () => {
       }
     });
     const url = URL.parse(mocks.url);
-    mocks.requestInstanceMock.expects('on').withArgs('timeout', sinon.match.func).returnsThis();
     mocks.requestInstanceMock.expects('on').withArgs('error', sinon.match.func).returnsThis();
     mocks.requestInstanceMock.expects('end').once();
     mocks.requestInstanceMock.expects('write').withArgs(stringify(mocks.requestOptions.form)).once();
@@ -255,7 +254,6 @@ describe('[http.ts]', () => {
       }
     });
     const url = URL.parse(mocks.url);
-    mocks.requestInstanceMock.expects('on').withArgs('timeout', sinon.match.func).returnsThis();
     mocks.requestInstanceMock.expects('on').withArgs('error', sinon.match.func).returnsThis();
     mocks.requestInstanceMock.expects('end').once();
     mocks.requestInstanceMock.expects('write').withArgs(JSON.stringify(mocks.requestOptions.body)).once();
@@ -295,7 +293,6 @@ describe('[http.ts]', () => {
       body: faker.random.word()
     });
     const url = URL.parse(mocks.url);
-    mocks.requestInstanceMock.expects('on').withArgs('timeout', sinon.match.func).returnsThis();
     mocks.requestInstanceMock.expects('on').withArgs('error', sinon.match.func).returnsThis();
     mocks.requestInstanceMock.expects('end').once();
     mocks.requestInstanceMock.expects('write').withArgs(mocks.requestOptions.body).once();
@@ -335,7 +332,6 @@ describe('[http.ts]', () => {
       form: faker.random.word()
     });
     const url = URL.parse(mocks.url);
-    mocks.requestInstanceMock.expects('on').withArgs('timeout', sinon.match.func).returnsThis();
     mocks.requestInstanceMock.expects('on').withArgs('error', sinon.match.func).returnsThis();
     mocks.requestInstanceMock.expects('end').once();
     mocks.requestInstanceMock.expects('write').withArgs(mocks.requestOptions.form).once();
@@ -368,74 +364,74 @@ describe('[http.ts]', () => {
     })).to.eq(true);
   });
 
-
-  it('should send get request with default options for https for timeout', async () => {
+  it('should send get request with default options for https with json parsing timeout', (done) => {
     // Arrange
-    const mocks = createRequestOptions('https://m.trendyol.com', {timeout: 100});
+    const mocks = createRequestOptions('https://m.trendyol.com', {
+      json: true,
+      httpTimeout: 20
+    }, null, true);
     const url = URL.parse(mocks.url);
-    mocks.requestInstanceMock.expects('abort').once();
-    mocks.requestInstanceMock.expects('end').once();
-    mocks.requestInstanceMock.expects('on').withArgs('timeout', sinon.match.func).callsArg(1).returnsThis();
     mocks.requestInstanceMock.expects('on').withArgs('error', sinon.match.func).returnsThis();
+    mocks.requestInstanceMock.expects('end').once();
+    mocks.requestInstanceMock.expects('abort').callsFake((_: any) => {
+      cbStub(true);
+    });
 
     const cbStub = sandbox.stub();
 
     // Act
-    httpInstance.request(mocks.url, {...mocks.requestOptions, httpTimeout: 100}, cbStub);
+    httpInstance.request(mocks.url, mocks.requestOptions, cbStub);
 
     // Assert
-    expect(mocks.requestStub.calledOnce).to.eq(true);
-    expect(mocks.compressionStub.calledWithExactly(mocks.response as any, sinon.match.func)).to.eq(true);
-    expect(mocks.compressionSupportedStreamsStub.calledOnce).to.eq(true);
-    expect(mocks.requestStub.calledWith({
-      hostname: url.hostname,
-      path: url.pathname,
-      port: null,
-      timeout: 100,
-      method: 'get',
-      protocol: url._protocol + ':',
-      agent: httpInstance.httpsAgent,
-      headers: {
-        'accept-encoding': mocks.supportedTypes
-      }
-    }, sinon.match.func)).to.eq(true);
-    expect(cbStub.calledWith(null, {
-      body: mocks.responseBody,
-      response: mocks.response
-    })).to.eq(true);
+    setTimeout(() => {
+      expect(mocks.requestStub.calledOnce).to.eq(true);
+      expect(mocks.requestStub.calledWith({
+        hostname: url.hostname,
+        path: url.pathname,
+        protocol: url._protocol + ':',
+        method: 'get',
+        timeout: 20,
+        port: null,
+        agent: httpInstance.httpsAgent,
+        headers: {
+          'content-type': 'application/json',
+          'accept-encoding': mocks.supportedTypes
+        }
+      }, sinon.match.func)).to.eq(true);
+      expect(cbStub.calledWith(true)).to.eq(true);
+      done();
+    }, 300);
   });
 
-  it('should send get request with default options for https for timeout throw', async () => {
+  it('Deletes timeout when error', (done) => {
     // Arrange
-    const mocks = createRequestOptions('https://m.trendyol.com', {timeout: 100});
+    const mocks = createRequestOptions('https://m.trendyol.com', {
+      json: true
+    }, null, true);
     const url = URL.parse(mocks.url);
-    const err = faker.random.word();
-    mocks.requestInstanceMock.expects('abort').once();
+    mocks.requestInstanceMock.expects('on').withArgs('error', sinon.match.func).callsArgWith(1, true);
     mocks.requestInstanceMock.expects('end').once();
-    mocks.requestInstanceMock.expects('on').withArgs('timeout', sinon.match.func).callsArg(1).returnsThis();
-    mocks.requestInstanceMock.expects('on').withArgs('error', sinon.match.func).callsArgWith(1, err).returnsThis();
 
     const cbStub = sandbox.stub();
 
     // Act
-    httpInstance.request(mocks.url, {...mocks.requestOptions, httpTimeout: 100}, cbStub);
+    httpInstance.request(mocks.url, mocks.requestOptions, cbStub);
 
     // Assert
-    expect(mocks.requestStub.calledOnce).to.eq(true);
-    expect(mocks.compressionStub.calledWithExactly(mocks.response as any, sinon.match.func)).to.eq(true);
-    expect(mocks.compressionSupportedStreamsStub.calledOnce).to.eq(true);
-    expect(mocks.requestStub.calledWith({
-      hostname: url.hostname,
-      path: url.pathname,
-      port: null,
-      timeout: 100,
-      method: 'get',
-      protocol: url._protocol + ':',
-      agent: httpInstance.httpsAgent,
-      headers: {
-        'accept-encoding': mocks.supportedTypes
-      }
-    }, sinon.match.func)).to.eq(true);
-    expect(cbStub.calledWith(err)).to.eq(true);
+      expect(mocks.requestStub.calledOnce).to.eq(true);
+      expect(mocks.requestStub.calledWith({
+        hostname: url.hostname,
+        path: url.pathname,
+        protocol: url._protocol + ':',
+        method: 'get',
+        port: null,
+        agent: httpInstance.httpsAgent,
+        headers: {
+          'content-type': 'application/json',
+          'accept-encoding': mocks.supportedTypes
+        }
+      }, sinon.match.func)).to.eq(true);
+      expect(cbStub.calledWith(true)).to.eq(true);
+      done();
   });
 });

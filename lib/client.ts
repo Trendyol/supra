@@ -1,6 +1,7 @@
 import {Http} from "./http";
 import {ClientResponse, HttpRequestOptions, RequestOptions} from "./types";
 import CircuitBreaker from "opossum";
+import {CONTENT_TYPE} from "./enums";
 
 class Client {
   private http: Http;
@@ -25,13 +26,9 @@ class Client {
             if (err || !res) {
               reject(err);
             } else {
-              if (options && options.json && res.body) {
-                try {
-                  res.json = JSON.parse(res.body);
-                  resolve(res);
-                } catch (e) {
-                  reject(e);
-                }
+              if (options && options.json && res.body && res.response.headers["content-type"] && res.response.headers["content-type"].startsWith(CONTENT_TYPE.ApplicationJson)) {
+                res.json = JSON.parse(res.body);
+                resolve(res);
               } else {
                 resolve(res);
               }

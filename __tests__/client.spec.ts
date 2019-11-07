@@ -4,6 +4,7 @@ import {expect} from "chai";
 import {Client} from "../lib/client";
 import {Http} from "../lib/http";
 import CircuitBreaker = require("opossum");
+import {CONTENT_TYPE} from "../lib/enums";
 
 const sandbox = sinon.createSandbox();
 let client: Client;
@@ -66,7 +67,12 @@ describe('[client.ts]', () => {
   it('should call http handler (json)', async () => {
     // Arrange
     const httpResponse = {
-      body: '{"test":4}'
+      body: '{"test":4}',
+      response: {
+        headers: {
+          'content-type': CONTENT_TYPE.ApplicationJson
+        }
+      }
     };
     const name = faker.random.word();
     const requestOptions = {json: true};
@@ -87,6 +93,11 @@ describe('[client.ts]', () => {
       body: '{"test":4}',
       json: {
         test: 4
+      },
+      response: {
+        headers: {
+          'content-type': CONTENT_TYPE.ApplicationJson
+        }
       }
     });
   });
