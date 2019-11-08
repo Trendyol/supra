@@ -35,6 +35,7 @@ jobs:
           paths:
             - README.md
             - package.json
+            - opossum-state-fixed
             - package-lock.json
             - .npmignore
             - dist
