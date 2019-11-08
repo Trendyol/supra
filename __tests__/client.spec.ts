@@ -3,8 +3,9 @@ import * as faker from "faker";
 import {expect} from "chai";
 import {Client} from "../lib/client";
 import {Http} from "../lib/http";
-import CircuitBreaker = require("opossum");
 import {CONTENT_TYPE} from "../lib/enums";
+
+const CircuitBreaker = require("../opossum-state-fixed");
 
 const sandbox = sinon.createSandbox();
 let client: Client;
