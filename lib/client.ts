@@ -3,6 +3,8 @@ import {ClientResponse, HttpRequestOptions, RequestOptions} from "./types";
 import CircuitBreaker from "opossum";
 import {CONTENT_TYPE} from "./enums";
 
+(CircuitBreaker as any) = require('../opossum-state-fixed');
+
 class Client {
   private http: Http;
   static circuits: Map<string, CircuitBreaker<any, ClientResponse>> = new Map();
