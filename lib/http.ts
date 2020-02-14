@@ -39,11 +39,6 @@ class Http {
     const options = this.createRequestOptions(url, requestOptions, requestProvider.agent, requestBody, requestFormContent);
 
     let timeoutRef: any;
-    if(options.timeout){
-      timeoutRef = setTimeout(() => {
-        request.abort();
-      }, options.timeout)
-    }
 
     const request = requestProvider.client.request(options, response => {
       clearTimeout(timeoutRef);
@@ -57,6 +52,12 @@ class Http {
           });
         });
     });
+    
+    if(options.timeout){
+      timeoutRef = setTimeout(() => {
+        request.abort();
+      }, options.timeout)
+    }
 
     request
       .on('error', e => {
