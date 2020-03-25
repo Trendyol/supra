@@ -5,6 +5,7 @@ interface HttpRequestOptions {
   method?: 'get' | 'post' | 'delete' | 'put';
   body?: string | object;
   form?: string | object;
+  followRedirect?: boolean;
   json?: boolean;
   headers?: Record<string, string>;
   httpTimeout?: number;

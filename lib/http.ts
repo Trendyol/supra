@@ -52,8 +52,8 @@ class Http {
           });
         });
     });
-    
-    if(options.timeout){
+
+    if (options.timeout) {
       timeoutRef = setTimeout(() => {
         request.abort();
       }, options.timeout)
@@ -76,7 +76,7 @@ class Http {
   private createRequestOptions(targetUrl: string, options: HttpRequestOptions, agent: http.Agent | https.Agent, bodyContent?: string, formContent?: string) {
     const url = Url.parse(targetUrl);
 
-    const mergedOptions = {
+    const mergedOptions: any = {
       method: options.method || 'get',
       agent,
       hostname: url.hostname,
@@ -88,6 +88,10 @@ class Http {
         'accept-encoding': Compression.getSupportedStreams()
       }
     } as https.RequestOptions | http.RequestOptions;
+
+    if (typeof options.followRedirect === "boolean") {
+      mergedOptions.followRedirect = options.followRedirect;
+    }
 
     if (options.httpTimeout) {
       mergedOptions.timeout = options.httpTimeout;

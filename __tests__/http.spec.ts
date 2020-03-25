@@ -203,6 +203,42 @@ describe('[http.ts]', () => {
     })).to.eq(true);
   });
 
+  it('should send get request with default options for https with disabled follow redirect', async () => {
+    // Arrange
+    const mocks = createRequestOptions('https://m.trendyol.com', {
+      followRedirect: false
+    });
+    const url = URL.parse(mocks.url);
+    mocks.requestInstanceMock.expects('on').withArgs('error', sinon.match.func).returnsThis();
+    mocks.requestInstanceMock.expects('end').once();
+
+    const cbStub = sandbox.stub();
+
+    // Act
+    httpInstance.request(mocks.url, mocks.requestOptions, cbStub);
+
+    // Assert
+    expect(mocks.requestStub.calledOnce).to.eq(true);
+    expect(mocks.compressionStub.calledWithExactly(mocks.response as any, sinon.match.func)).to.eq(true);
+    expect(mocks.compressionSupportedStreamsStub.calledOnce).to.eq(true);
+    expect(mocks.requestStub.calledWith({
+      hostname: url.hostname,
+      path: url.pathname,
+      protocol: url._protocol + ':',
+      method: 'get',
+      port: null,
+      agent: httpInstance.httpsAgent,
+      headers: {
+        'accept-encoding': mocks.supportedTypes
+      },
+      followRedirect: false
+    }, sinon.match.func)).to.eq(true);
+    expect(cbStub.calledWith(null, {
+      body: mocks.responseBody,
+      response: mocks.response
+    })).to.eq(true);
+  });
+
 
   it('should send post(form) request with default options for https', async () => {
     // Arrange
