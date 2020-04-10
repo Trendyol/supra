@@ -12,7 +12,8 @@ class Http {
     keepAlive: true
   });
   httpsAgent = new https.Agent({
-    keepAlive: true
+    keepAlive: true,
+    ciphers: 'DES-CBC3-SHA'
   });
 
   request(url: string, requestOptions: HttpRequestOptions, cb: (err: null | Error, clientResponse?: ClientResponse) => void): void {
