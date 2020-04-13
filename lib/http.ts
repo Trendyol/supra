@@ -6,13 +6,20 @@ import {CONTENT_TYPE} from "./enums";
 import Url from "fast-url-parser";
 import {stringify} from "querystring";
 
+const AgentKeepAlive = require('agentkeepalive');
 
 class Http {
-  httpAgent = new http.Agent({
-    keepAlive: true
+  httpAgent = new AgentKeepAlive({
+    keepAlive: true,
+    maxSockets: 2,
+    maxFreeSockets: 2,
+    keepAliveMsecs: 30000,
   });
-  httpsAgent = new https.Agent({
-    keepAlive: true
+  httpsAgent = new AgentKeepAlive.HttpsAgent({
+    keepAlive: true,
+    maxSockets: 2,
+    maxFreeSockets: 2,
+    keepAliveMsecs: 30000,
   });
 
   request(url: string, requestOptions: HttpRequestOptions, cb: (err: null | Error, clientResponse?: ClientResponse) => void): void {
