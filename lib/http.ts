@@ -11,14 +11,14 @@ const AgentKeepAlive = require('agentkeepalive');
 class Http {
   httpAgent = new AgentKeepAlive({
     keepAlive: true,
-    maxSockets: 2,
-    maxFreeSockets: 2,
+    maxSockets: 50,
+    maxFreeSockets: 30,
     keepAliveMsecs: 30000,
   });
   httpsAgent = new AgentKeepAlive.HttpsAgent({
     keepAlive: true,
-    maxSockets: 2,
-    maxFreeSockets: 2,
+    maxSockets: 50,
+    maxFreeSockets: 30,
     keepAliveMsecs: 30000,
   });
 
