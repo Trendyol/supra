@@ -23,7 +23,12 @@ describe('[http.ts]', () => {
       on: () => {
       },
       abort: () => {
-      }
+      },
+      setTimeout: () => {
+      },
+      setNoDelay: () => {
+      },
+      setHeader: () => {}
     };
     const mock: any = {
       url,
@@ -271,7 +276,6 @@ describe('[http.ts]', () => {
       agent: httpInstance.httpsAgent,
       headers: {
         'accept-encoding': mocks.supportedTypes,
-        'content-length': Buffer.byteLength(stringify(mocks.requestOptions.form)),
         'content-type': 'application/x-www-form-urlencoded'
       }
     }, sinon.match.func)).to.eq(true);
@@ -312,7 +316,6 @@ describe('[http.ts]', () => {
       agent: httpInstance.httpsAgent,
       headers: {
         'accept-encoding': mocks.supportedTypes,
-        'content-length': Buffer.byteLength(JSON.stringify(mocks.requestOptions.body)),
         'content-type': 'application/json'
       }
     }, sinon.match.func)).to.eq(true);
@@ -351,7 +354,6 @@ describe('[http.ts]', () => {
       agent: httpInstance.httpsAgent,
       headers: {
         'accept-encoding': mocks.supportedTypes,
-        'content-length': Buffer.byteLength(mocks.requestOptions.body),
         'content-type': 'application/json'
       }
     }, sinon.match.func)).to.eq(true);
@@ -390,7 +392,6 @@ describe('[http.ts]', () => {
       agent: httpInstance.httpsAgent,
       headers: {
         'accept-encoding': mocks.supportedTypes,
-        'content-length': Buffer.byteLength(mocks.requestOptions.form),
         'content-type': 'application/x-www-form-urlencoded'
       }
     }, sinon.match.func)).to.eq(true);
@@ -398,76 +399,5 @@ describe('[http.ts]', () => {
       body: mocks.responseBody,
       response: mocks.response
     })).to.eq(true);
-  });
-
-  it('should send get request with default options for https with json parsing timeout', (done) => {
-    // Arrange
-    const mocks = createRequestOptions('https://m.trendyol.com', {
-      json: true,
-      httpTimeout: 20
-    }, null, true);
-    const url = URL.parse(mocks.url);
-    mocks.requestInstanceMock.expects('on').withArgs('error', sinon.match.func).returnsThis();
-    mocks.requestInstanceMock.expects('end').once();
-    mocks.requestInstanceMock.expects('abort').callsFake((_: any) => {
-      cbStub(true);
-    });
-
-    const cbStub = sandbox.stub();
-
-    // Act
-    httpInstance.request(mocks.url, mocks.requestOptions, cbStub);
-
-    // Assert
-    setTimeout(() => {
-      expect(mocks.requestStub.calledOnce).to.eq(true);
-      expect(mocks.requestStub.calledWith({
-        hostname: url.hostname,
-        path: url.pathname,
-        protocol: url._protocol + ':',
-        method: 'get',
-        timeout: 20,
-        port: null,
-        agent: httpInstance.httpsAgent,
-        headers: {
-          'content-type': 'application/json',
-          'accept-encoding': mocks.supportedTypes
-        }
-      }, sinon.match.func)).to.eq(true);
-      expect(cbStub.calledWith(true)).to.eq(true);
-      done();
-    }, 300);
-  });
-
-  it('Deletes timeout when error', (done) => {
-    // Arrange
-    const mocks = createRequestOptions('https://m.trendyol.com', {
-      json: true
-    }, null, true);
-    const url = URL.parse(mocks.url);
-    mocks.requestInstanceMock.expects('on').withArgs('error', sinon.match.func).callsArgWith(1, true);
-    mocks.requestInstanceMock.expects('end').once();
-
-    const cbStub = sandbox.stub();
-
-    // Act
-    httpInstance.request(mocks.url, mocks.requestOptions, cbStub);
-
-    // Assert
-      expect(mocks.requestStub.calledOnce).to.eq(true);
-      expect(mocks.requestStub.calledWith({
-        hostname: url.hostname,
-        path: url.pathname,
-        protocol: url._protocol + ':',
-        method: 'get',
-        port: null,
-        agent: httpInstance.httpsAgent,
-        headers: {
-          'content-type': 'application/json',
-          'accept-encoding': mocks.supportedTypes
-        }
-      }, sinon.match.func)).to.eq(true);
-      expect(cbStub.calledWith(true)).to.eq(true);
-      done();
   });
 });

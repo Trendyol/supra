@@ -6,16 +6,14 @@ import {CONTENT_TYPE} from "./enums";
 import Url from "fast-url-parser";
 import {stringify} from "querystring";
 
-const AgentKeepAlive = require('agentkeepalive');
-
 class Http {
-  httpAgent = new AgentKeepAlive({
+  httpAgent = new http.Agent({
     keepAlive: true,
     maxSockets: 50,
     maxFreeSockets: 30,
     keepAliveMsecs: 30000,
   });
-  httpsAgent = new AgentKeepAlive.HttpsAgent({
+  httpsAgent = new https.Agent({
     keepAlive: true,
     maxSockets: 50,
     maxFreeSockets: 30,
@@ -45,10 +43,7 @@ class Http {
 
     const options = this.createRequestOptions(url, requestOptions, requestProvider.agent, requestBody, requestFormContent);
 
-    let timeoutRef: any;
-
     const request = requestProvider.client.request(options, response => {
-      clearTimeout(timeoutRef);
       Compression
         .handle(response, (err, body) => {
           if (err) return cb(err);
@@ -60,24 +55,41 @@ class Http {
         });
     });
 
+    request.setNoDelay(true);
+
     if (options.timeout) {
-      timeoutRef = setTimeout(() => {
+      request.setTimeout(options.timeout, () => {
         request.abort();
-      }, options.timeout)
+      });
     }
 
     request
       .on('error', e => {
-        clearTimeout(timeoutRef);
         cb(e);
       });
 
     const writableContent = requestBody || requestFormContent;
     if (writableContent) {
-      request.write(writableContent);
+      if (requestOptions.compressRequest) {
+        Compression.compressBody(writableContent, (err, buffer) => {
+          if (err || !buffer) {
+            request.setHeader('content-length', Buffer.byteLength(writableContent));
+            request.write(writableContent);
+          } else {
+            request.setHeader('content-encoding', 'gzip');
+            request.setHeader('content-length', Buffer.byteLength(buffer));
+            request.write(buffer);
+          }
+          request.end();
+        });
+      } else {
+        request.setHeader('content-length', Buffer.byteLength(writableContent));
+        request.write(writableContent);
+        request.end();
+      }
+    } else {
+      request.end();
     }
-
-    request.end();
   }
 
   private createRequestOptions(targetUrl: string, options: HttpRequestOptions, agent: http.Agent | https.Agent, bodyContent?: string, formContent?: string) {
@@ -109,10 +121,8 @@ class Http {
     }
 
     if (bodyContent) {
-      mergedOptions.headers!['content-length'] = Buffer.byteLength(bodyContent);
       mergedOptions.headers!['content-type'] = CONTENT_TYPE.ApplicationJson;
     } else if (formContent) {
-      mergedOptions.headers!['content-length'] = Buffer.byteLength(formContent);
       mergedOptions.headers!['content-type'] = CONTENT_TYPE.FormUrlEncoded;
     }
 

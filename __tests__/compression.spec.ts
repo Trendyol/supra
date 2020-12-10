@@ -180,4 +180,23 @@ describe('[compression.ts]', () => {
     // Assert
     expect(types).to.be.a('string');
   });
+
+  it('should compress request body', (done) => {
+    // Arrange
+    const compressionText = Math.random().toString();
+    const unzippedBuffer = Buffer.from(compressionText, 'utf8');
+    const zippedBuffer = Buffer.from(Math.random().toString(), 'utf8');
+    const gzipStub = sandbox.stub(zlib, 'gzip')
+      .callsArgWith(1, undefined, zippedBuffer)
+      .callsFake(() => done());
+    const stub = sandbox.stub();
+
+    // Act
+    Compression.compressBody(compressionText, stub);
+
+    // Assert
+    expect(stub.calledWithExactly(undefined, zippedBuffer)).to.eq(true);
+    expect((gzipStub as any).calledWithExactly(unzippedBuffer, sinon.match.func as any)).to.eq(true);
+  });
+
 });

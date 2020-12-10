@@ -23,6 +23,13 @@ class Compression {
     }
   }
 
+  static compressBody(text: string, cb: (err: Error | null, data: Buffer) => void): void {
+    const buf = Buffer.from(text, 'utf8');
+    zlib.gzip(buf, (err, data) => {
+      cb(err, data);
+    });
+  }
+
   static handle(res: http.IncomingMessage, cb: (err: Error | null, body?: string) => void): void {
     const encoding = res.headers["content-encoding"];
 
