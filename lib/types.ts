@@ -2,7 +2,7 @@ import * as http from "http";
 import * as CircuitBreaker from "opossum";
 
 interface HttpRequestOptions {
-  method?: 'get' | 'post' | 'delete' | 'put' | 'head';
+  method?: 'get' | 'post' | 'delete' | 'put' | 'head' | 'patch';
   body?: string | object;
   form?: string | object;
   followRedirect?: boolean;
