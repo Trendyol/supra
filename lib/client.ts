@@ -29,8 +29,12 @@ class Client {
               reject(err);
             } else {
               if (options && options.json && res.body && res.response.headers["content-type"] && res.response.headers["content-type"].startsWith(CONTENT_TYPE.ApplicationJson)) {
-                res.json = JSON.parse(res.body);
-                resolve(res);
+                try {
+                  res.json = JSON.parse(res.body);
+                  resolve(res);
+                } catch (error) {
+                  reject(error);
+                }
               } else {
                 resolve(res);
               }
