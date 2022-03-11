@@ -1,0 +1,6 @@
+coverage
+lib
+node_modules
+benchmark
+.circleci
+__tests__
