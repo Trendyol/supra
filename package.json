@@ -39,7 +39,7 @@
     "jest": "^24.9.0",
     "nock": "^11.6.0",
     "request": "^2.88.0",
-    "requestretry": "^4.0.2",
+    "requestretry": "^7.0.0",
     "sinon": "^7.5.0",
     "ts-jest": "^24.1.0",
     "typescript": "^3.6.4"
