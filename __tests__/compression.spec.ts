@@ -55,7 +55,7 @@ describe('[compression.ts]', () => {
     decompressMock
       .expects('on')
       .withArgs('data', sinon.match.func)
-      .callsArgWith(1, decompressionText);
+      .callsArgWith(1,  Buffer.from(decompressionText));
 
     decompressMock
       .expects('on')
@@ -94,7 +94,7 @@ describe('[compression.ts]', () => {
     decompressMock
       .expects('on')
       .withArgs('data', sinon.match.func)
-      .callsArgWith(1, decompressionText);
+      .callsArgWith(1, Buffer.from(decompressionText));
 
     decompressMock
       .expects('on')
@@ -125,7 +125,7 @@ describe('[compression.ts]', () => {
     requestMock
       .expects('on')
       .withArgs('data', sinon.match.func)
-      .callsArgWith(1, decompressionText);
+      .callsArgWith(1,  Buffer.from(decompressionText));
 
     requestMock
       .expects('on')
