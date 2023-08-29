@@ -3,21 +3,22 @@ import * as http from "http";
 
 class Compression {
   private static decompressStream(res: http.IncomingMessage, cb: (err: Error | null, body?: string) => void, handlerStream?: zlib.BrotliDecompress | zlib.Gunzip): void {
-    let buffer: string = '';
+    const buffer: Uint8Array[] =[];
     const stream = handlerStream || res;
 
     stream.on('data', bufferChunk => {
-      buffer += bufferChunk;
+      buffer.push(bufferChunk);
     });
-
+  
     stream.on('error', err => {
       cb(err);
     });
 
     stream.on('end', (_: void) => {
-      cb(null, buffer);
+      const fullBuffer = Buffer.concat(buffer);
+      cb(null, fullBuffer.toString('utf8'));
     });
-
+    
     if (handlerStream) {
       res.pipe(handlerStream);
     }
