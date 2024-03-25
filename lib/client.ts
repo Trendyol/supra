@@ -8,30 +8,24 @@ import { generateCurl } from "./utils";
 class Client {
   private http: Http;
   static circuits: Map<string, CircuitBreaker<any, ClientResponse>> = new Map();
+  private globalOptions: Record<string, string> = {};
 
   constructor(http: Http) {
     this.http = http;
   }
 
-  request(
-    name: string,
-    url: string,
-    options?: RequestOptions
-  ): Promise<ClientResponse> {
-    const circuit =
-      Client.circuits.get(name) || this.createCircuit(name, options as any);
+  setGlobalOptions(options: Record<string, string>) {
+    this.globalOptions = options;
+  }
+
+  request(name: string, url: string, options?: RequestOptions): Promise<ClientResponse> {
+    const circuit = Client.circuits.get(name) || this.createCircuit(name, options as any);
 
     return circuit.fire(url, options || {});
   }
 
-  private createCircuit(
-    name: string,
-    options: RequestOptions
-  ): CircuitBreaker<any, ClientResponse> {
-    const requestSender = (
-      url: string,
-      requestOptions: HttpRequestOptions
-    ): Promise<ClientResponse> => {
+  private createCircuit(name: string, options: RequestOptions): CircuitBreaker<any, ClientResponse> {
+    const requestSender = (url: string, requestOptions: HttpRequestOptions): Promise<ClientResponse> => {
       return new Promise<ClientResponse>((resolve, reject) => {
         this.http.request(url, requestOptions, (err, res) => {
           if (err || !res) {
@@ -40,21 +34,17 @@ class Client {
             if (
               requestOptions &&
               requestOptions.headers &&
-              requestOptions.headers["x-curl"] === "true"
+              this.globalOptions.flagHeaderNameToShowCurlOnResponse &&
+              requestOptions.headers[this.globalOptions.flagHeaderNameToShowCurlOnResponse]
             ) {
-              res.response.headers["x-curl"] = generateCurl(
-                url,
-                requestOptions
-              );
+              res.response.headers[this.globalOptions.responseHeaderNameForCurl] = generateCurl(url, requestOptions);
             }
             if (
               options &&
               options.json &&
               res.body &&
               res.response.headers["content-type"] &&
-              res.response.headers["content-type"].startsWith(
-                CONTENT_TYPE.ApplicationJson
-              )
+              res.response.headers["content-type"].startsWith(CONTENT_TYPE.ApplicationJson)
             ) {
               try {
                 res.json = JSON.parse(res.body);
