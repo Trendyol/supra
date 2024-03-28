@@ -1,16 +1,13 @@
 import { HttpRequestOptions } from "./types";
 
-export const generateCurl = (
-  url: string,
-  requestOptions: HttpRequestOptions
-) => {
+export const convertRequestToCurl = (url: string, requestOptions: HttpRequestOptions) => {
   const headersText = Object.entries(requestOptions.headers || {})
-    .map((header) => `-H '${header[0]}: ${header[1]}'`)
+    .map(([key, value]) => `-H '${key}: ${value}'`)
     .join(" ");
+  const bodyText = requestOptions.body ? `--data '${JSON.stringify(requestOptions.body)}'`.replace(/\\/g, "") : "";
 
-  return `curl -X '${
-    requestOptions.method
-  }' ${headersText} '${url}' --data '${JSON.stringify(
-    requestOptions.body
-  )}'`.replace(/\\/g, "");
+  return `curl -X '${requestOptions.method}' ${headersText} '${url}' ${bodyText}`;
 };
+
+// Example output:
+// curl -X 'post' -H 'Content-Type: application/json' -H 'x-show-curl: true' 'https://dummyjson.com/posts/add' --data '"{"title":"Test.","userId":5}"'

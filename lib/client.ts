@@ -2,7 +2,7 @@ import { Http } from "./http";
 import { ClientResponse, HttpRequestOptions, RequestOptions } from "./types";
 import CircuitBreaker from "opossum";
 import { CONTENT_TYPE } from "./enums";
-import { generateCurl } from "./utils";
+import { convertRequestToCurl } from "./utils";
 (CircuitBreaker as any) = require("../opossum-state-fixed");
 
 class Client {
@@ -30,31 +30,31 @@ class Client {
         this.http.request(url, requestOptions, (err, res) => {
           if (err || !res) {
             reject(err);
-          } else {
-            if (
-              requestOptions &&
-              requestOptions.headers &&
-              this.globalOptions.flagHeaderNameToShowCurlOnResponse &&
-              requestOptions.headers[this.globalOptions.flagHeaderNameToShowCurlOnResponse]
-            ) {
-              res.response.headers[this.globalOptions.responseHeaderNameForCurl] = generateCurl(url, requestOptions);
-            }
-            if (
-              options &&
-              options.json &&
-              res.body &&
-              res.response.headers["content-type"] &&
-              res.response.headers["content-type"].startsWith(CONTENT_TYPE.ApplicationJson)
-            ) {
-              try {
-                res.json = JSON.parse(res.body);
-                resolve(res);
-              } catch (error) {
-                reject(error);
-              }
-            } else {
+            return;
+          }
+
+          const headers = requestOptions.headers || {};
+          const { flagHeaderNameToShowCurlOnResponse, responseHeaderNameForCurl } = this.globalOptions;
+
+          if (headers[flagHeaderNameToShowCurlOnResponse]) {
+            res.response.headers[responseHeaderNameForCurl] = convertRequestToCurl(url, requestOptions);
+          }
+
+          if (
+            options &&
+            options.json &&
+            res.body &&
+            res.response.headers["content-type"] &&
+            res.response.headers["content-type"].startsWith(CONTENT_TYPE.ApplicationJson)
+          ) {
+            try {
+              res.json = JSON.parse(res.body);
               resolve(res);
+            } catch (error) {
+              reject(error);
             }
+          } else {
+            resolve(res);
           }
         });
       });
