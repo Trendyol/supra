@@ -1,3 +1,5 @@
+
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Trendyol/supra/badge)](https://scorecard.dev/viewer/?uri=github.com/Trendyol/supra)
 Documentation will be released soon.
 
 
