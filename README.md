@@ -8,7 +8,6 @@ Documentation will be released soon.
 npm i supra-http
 ```
 
-
 ## Simple Usage
 
 ### Get
