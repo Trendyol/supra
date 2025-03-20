@@ -1,148 +1,137 @@
-import * as sinon from "sinon";
-import * as faker from "faker";
-import {expect} from "chai";
-import {Client} from "../lib/client";
-import {Http} from "../lib/http";
-import {CONTENT_TYPE} from "../lib/enums";
+import { Client } from "../lib/client";
+import { Http } from "../lib/http";
+import { CONTENT_TYPE } from "../lib/enums";
+import { convertRequestToCurl } from "../lib/utils";
 
-const CircuitBreaker = require("../opossum-state-fixed");
+// Mock the convertRequestToCurl utility
+jest.mock("../lib/utils", () => ({
+  convertRequestToCurl: jest.fn().mockReturnValue("curl command"),
+}));
 
-const sandbox = sinon.createSandbox();
-let client: Client;
+describe("Client", () => {
+  let client: Client;
+  // Create a fake Http instance with a jest mock for its request method
+  let fakeHttp: Partial<Http> & { request: jest.Mock };
 
-const http = new Http();
-
-let httpMock: sinon.SinonMock;
-
-describe('[client.ts]', () => {
   beforeEach(() => {
-    httpMock = sandbox.mock(http);
-    client = new Client(http);
+    // Clear static circuits between tests
     Client.circuits.clear();
-  });
 
-  afterEach(() => {
-    sandbox.verifyAndRestore();
-  });
-
-  it('should create new Client', () => {
-    // Arrange
-    const client = new Client(http);
-
-    // Assert
-    expect(client).to.be.instanceOf(Client);
-  });
-
-  it('should create new circuit', async () => {
-    // Arrange
-    const name = faker.random.word();
-    const url = faker.internet.url();
-    const responseData = faker.random.word();
-    sandbox.stub(CircuitBreaker.prototype, 'fire').resolves(responseData);
-
-    // Act
-    const response = await client.request(name, url);
-
-    // Assert
-    expect(Client.circuits.size).to.eq(1);
-    expect(response).to.eq(responseData);
-  });
-
-  it('should use existing circuit', async () => {
-    // Arrange
-    const name = faker.random.word();
-    const url = faker.internet.url();
-    const responseData = faker.random.word();
-    sandbox.stub(CircuitBreaker.prototype, 'fire').resolves(responseData);
-
-    // Act
-    const response = await client.request(name, url);
-    const response2 = await client.request(name, url);
-
-    // Assert
-    expect(Client.circuits.size).to.eq(1);
-    expect(response).to.eq(responseData);
-    expect(response2).to.eq(responseData);
-  });
-
-  it('should call http handler (json)', async () => {
-    // Arrange
-    const httpResponse = {
-      body: '{"test":4}',
-      response: {
-        headers: {
-          'content-type': CONTENT_TYPE.ApplicationJson
-        }
-      }
+    fakeHttp = {
+      request: jest.fn(),
     };
-    const name = faker.random.word();
-    const requestOptions = {json: true};
-    const url = faker.internet.url();
+    client = new Client(fakeHttp as Http);
+  });
 
-    const responseCallback = sandbox.stub();
-
-    httpMock
-      .expects('request')
-      .withExactArgs(url, requestOptions, sinon.match.func)
-      .callsArgWith(2, null, httpResponse);
-
-    // Act
-    const response = await client.request(name, url, requestOptions);
-
-    // Assert
-    expect(response).to.deep.eq({
-      body: '{"test":4}',
-      json: {
-        test: 4
+  test("should resolve with client response without JSON parsing", async () => {
+    const fakeResponse = {
+      body: "Plain text body",
+      response: {
+        statusCode: 200,
+        headers: {},
       },
-      response: {
-        headers: {
-          'content-type': CONTENT_TYPE.ApplicationJson
-        }
-      }
-    });
-  });
-
-
-  it('should call http handler (raw)', async () => {
-    // Arrange
-    const httpResponse = {
-      body: '{"test":4}'
     };
-    const name = faker.random.word();
-    const url = faker.internet.url();
 
-    httpMock
-      .expects('request')
-      .withExactArgs(url, {}, sinon.match.func)
-      .callsArgWith(2, null, httpResponse);
+    // Provide type annotations to avoid implicit any errors
+    fakeHttp.request.mockImplementation(
+      (url: string, options: any, callback: (err: Error | null, res?: any) => void) => {
+        callback(null, fakeResponse);
+      }
+    );
 
-
-    // Act
-    const response = await client.request(name, url);
-
-    // Assert
-    expect(response).to.deep.eq({
-      body: '{"test":4}',
-    });
+    const response = await client.request("testCircuit", "http://example.com", { headers: {} });
+    expect(response).toEqual(fakeResponse);
   });
 
-  it('should call http handler (http error)', (done) => {
-    // Arrange
-    const error = faker.random.word();
-    const name = faker.random.word();
-    const url = faker.internet.url();
+  test("should resolve with parsed JSON when json option is true", async () => {
+    const fakeResponse = {
+      body: '{"key":"value"}',
+      response: {
+        statusCode: 200,
+        headers: { "content-type": "application/json" },
+      },
+    };
 
-    httpMock
-      .expects('request')
-      .withExactArgs(url, {}, sinon.match.func)
-      .callsArgWith(2, error, undefined);
+    fakeHttp.request.mockImplementation(
+      (url: string, options: any, callback: (err: Error | null, res?: any) => void) => {
+        callback(null, fakeResponse);
+      }
+    );
 
+    const response = await client.request("testCircuit", "http://example.com", { json: true, headers: {} });
+    // Expect the response to contain a parsed json property
+    expect(response).toEqual(fakeResponse);
+    expect(response.json).toEqual({ key: "value" });
+  });
 
-    // Act
-    client
-      .request(name, url)
-      .then(_ => done("Expected to throw"))
-      .catch(_ => done())
+  test("should reject when JSON parsing fails", async () => {
+    const fakeResponse = {
+      body: "invalid json",
+      response: {
+        statusCode: 200,
+        headers: { "content-type": "application/json" },
+      },
+    };
+
+    fakeHttp.request.mockImplementation(
+      (url: string, options: any, callback: (err: Error | null, res?: any) => void) => {
+        callback(null, fakeResponse);
+      }
+    );
+
+    // Expect the promise to reject due to JSON.parse failure
+    await expect(
+      client.request("testCircuit", "http://example.com", { json: true, headers: {} })
+    ).rejects.toThrow();
+  });
+
+  test("should add curl command header if global option flag is set", async () => {
+    // Set global options with flag names
+    client.setGlobalOptions({
+      flagHeaderNameToShowCurlOnResponse: "X-Show-Curl",
+      responseHeaderNameForCurl: "X-Curl",
+    });
+
+    const fakeResponse = {
+      body: "Plain text body",
+      response: {
+        statusCode: 200,
+        headers: {},
+      },
+    };
+
+    fakeHttp.request.mockImplementation(
+      (url: string, options: any, callback: (err: Error | null, res?: any) => void) => {
+        callback(null, fakeResponse);
+      }
+    );
+
+    // Provide a header with the flag so that the curl command is added
+    const requestOptions = { headers: { "X-Show-Curl": "true" } };
+
+    const response = await client.request("testCircuit", "http://example.com", requestOptions);
+    expect(response.response.headers["X-Curl"]).toBe("curl command");
+  });
+
+  test("should reject when http.request returns an error", async () => {
+    const error = new Error("Network error");
+
+    fakeHttp.request.mockImplementation(
+      (url: string, options: any, callback: (err: Error | null, res?: any) => void) => {
+        callback(error, null);
+      }
+    );
+
+    await expect(client.request("testCircuit", "http://example.com", {})).rejects.toBe(error);
+  });
+
+  test("should reject when http.request returns null response", async () => {
+    fakeHttp.request.mockImplementation(
+      (url: string, options: any, callback: (err: Error | null, res?: any) => void) => {
+        callback(null, null);
+      }
+    );
+
+    await expect(client.request("testCircuit", "http://example.com", {})).rejects.toBeNull();
   });
 });

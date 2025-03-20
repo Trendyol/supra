@@ -3,7 +3,6 @@ import { ClientResponse, HttpRequestOptions, RequestOptions } from "./types";
 import CircuitBreaker from "opossum";
 import { CONTENT_TYPE } from "./enums";
 import { convertRequestToCurl } from "./utils";
-(CircuitBreaker as any) = require("../opossum-state-fixed");
 
 class Client {
   private http: Http;
@@ -19,8 +18,7 @@ class Client {
   }
 
   request(name: string, url: string, options?: RequestOptions): Promise<ClientResponse> {
-    const circuit = Client.circuits.get(name) || this.createCircuit(name, options as any);
-
+    const circuit = Client.circuits.get(name) || this.createCircuit(name, options as RequestOptions);
     return circuit.fire(url, options || {});
   }
 
@@ -45,7 +43,7 @@ class Client {
             options.json &&
             res.body &&
             res.response.headers["content-type"] &&
-            res.response.headers["content-type"].startsWith(CONTENT_TYPE.ApplicationJson)
+            (res.response.headers["content-type"] as string).startsWith(CONTENT_TYPE.ApplicationJson)
           ) {
             try {
               res.json = JSON.parse(res.body);
@@ -60,10 +58,15 @@ class Client {
       });
     };
 
-    const circuit = new CircuitBreaker(requestSender, { name, ...options });
+    const circuit = new CircuitBreaker(requestSender, {
+      name,
+      timeout: options.httpTimeout || 10000, // Default timeout 10 seconds
+      errorThresholdPercentage: 50, // Open the circuit at 50% error rate
+      resetTimeout: 30000, // Try the circuit again after 30 seconds
+      ...(options as RequestOptions),
+    });
 
     Client.circuits.set(name, circuit);
-
     return circuit;
   }
 }

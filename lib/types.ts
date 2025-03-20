@@ -1,13 +1,12 @@
-import * as http from "http";
 import * as CircuitBreaker from "opossum";
 
 interface HttpRequestOptions {
-  method?: 'get' | 'post' | 'delete' | 'put' | 'head' | 'patch';
-  body?: string | object;
-  form?: string | object;
-  followRedirect?: boolean;
+  method?: string;
+  body?: object | string;
   json?: boolean;
+  form?: Record<string, string | number | boolean | readonly string[] | readonly number[] | readonly boolean[] | null> | string;
   headers?: Record<string, string>;
+  followRedirect?: boolean;
   httpTimeout?: number;
   compressRequest?: boolean;
 }
@@ -17,9 +16,12 @@ interface RequestOptions extends CircuitBreaker.Options, HttpRequestOptions {
 }
 
 interface ClientResponse {
-  body?: string;
+  body: string;
+  response: {
+    statusCode: number;
+    headers: Record<string, string | string[] | undefined>;
+  };
   json?: object;
-  response: http.IncomingMessage
 }
 
 export {
