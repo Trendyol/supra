@@ -1,6 +1,6 @@
 {
   "name": "@local/supra-http",
-  "version": "1.8.15",
+  "version": "1.8.5",
   "description": "Circuit breaking http client for NodeJs. And it is fast...",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
