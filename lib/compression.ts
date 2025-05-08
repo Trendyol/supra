@@ -32,6 +32,11 @@ class Compression {
   }
 
   static handle(res: http.IncomingMessage, cb: (err: Error | null, body?: string) => void): void {
+    if (res.statusCode === 204) {
+      cb(null, '');
+      return;
+    }
+    
     const encoding = res.headers["content-encoding"];
 
     if (encoding === 'gzip') {
